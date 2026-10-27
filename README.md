@@ -42,6 +42,15 @@ Config lives in `/etc/config/aiagent` (mode 600):
 | `timeout` | LLM request timeout, seconds | 60 |
 | `system_prompt` | override the built-in prompt | built-in |
 
+OpenRouter example (the model must support tool calling):
+
+```sh
+uci set aiagent.main.endpoint='https://openrouter.ai/api/v1'
+uci set aiagent.main.model='openai/gpt-4o-mini'
+uci set aiagent.main.api_key='sk-or-...'
+uci commit aiagent
+```
+
 Changes apply to the next message; changing `listen`/`ubus_*` needs a service restart.
 
 ## Build
