@@ -1,0 +1,13 @@
+{
+	"luci-app-aiagent": {
+		"description": "Grant access to the AI Agent chat and settings",
+		"read": {
+			"ubus": { "aiagent": [ "status", "poll" ] },
+			"uci": [ "aiagent" ]
+		},
+		"write": {
+			"ubus": { "aiagent": [ "send", "reset" ] },
+			"uci": [ "aiagent" ]
+		}
+	}
+}

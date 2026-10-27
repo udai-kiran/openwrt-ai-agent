@@ -4,6 +4,6 @@ Architecture: @ARCH@
 Maintainer: udai-kiran
 Section: net
 Priority: optional
-Depends: rpcd, rpcd-mod-iwinfo, rpcd-mod-luci, uhttpd-mod-ubus, jshn, uclient-fetch
+Depends: rpcd, rpcd-mod-iwinfo, rpcd-mod-luci, uhttpd-mod-ubus, jshn, uclient-fetch, luci-base
 Description: Read-only AI chat agent for OpenWrt. Answers questions about the router by
  calling an OpenAI-compatible LLM with read-only ubus tools.
