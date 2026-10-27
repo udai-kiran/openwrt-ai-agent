@@ -1,0 +1,16 @@
+{
+	"aiagent-ro": {
+		"description": "Read-only router state for the AI agent daemon",
+		"read": {
+			"ubus": {
+				"system": [ "board", "info" ],
+				"network.interface": [ "dump" ],
+				"network.wireless": [ "status" ],
+				"iwinfo": [ "devices", "assoclist" ],
+				"luci-rpc": [ "getDHCPLeases" ],
+				"log": [ "read" ]
+			},
+			"uci": [ "network", "wireless", "dhcp", "firewall", "system" ]
+		}
+	}
+}

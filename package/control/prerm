@@ -1,0 +1,6 @@
+#!/bin/sh
+[ -n "$IPKG_INSTROOT" ] && exit 0
+/etc/init.d/aiagent stop
+/etc/init.d/aiagent disable
+uci -q delete rpcd.aiagent_ro && uci commit rpcd && /etc/init.d/rpcd reload
+exit 0

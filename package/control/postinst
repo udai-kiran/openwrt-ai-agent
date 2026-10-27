@@ -1,0 +1,22 @@
+#!/bin/sh
+[ -n "$IPKG_INSTROOT" ] && exit 0
+
+chmod 600 /etc/config/aiagent
+
+# Dedicated rpcd login restricted to the read-only ACL group; created once.
+if [ -z "$(uci -q get aiagent.main.ubus_pass)" ]; then
+	pw="$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 32)"
+	uci -q delete rpcd.aiagent_ro
+	uci set rpcd.aiagent_ro=login
+	uci set rpcd.aiagent_ro.username="$(uci -q get aiagent.main.ubus_user || echo aiagent)"
+	uci set rpcd.aiagent_ro.password="$(uhttpd -m "$pw")"
+	uci add_list rpcd.aiagent_ro.read='aiagent-ro'
+	uci commit rpcd
+	uci set aiagent.main.ubus_pass="$pw"
+	uci commit aiagent
+fi
+
+/etc/init.d/rpcd reload
+/etc/init.d/aiagent enable
+/etc/init.d/aiagent restart
+exit 0

@@ -57,9 +57,11 @@ pub fn serve(config_path: &str, llm: Arc<dyn Llm>, ubus: Arc<dyn Ubus>) -> Resul
     Ok(())
 }
 
-fn respond(req: Request, code: u16, body: Value) {
+/// Always HTTP 200: the only client is the rpcd bridge using uclient-fetch, which drops the
+/// body of non-2xx responses. Failures are reported as {"error": "..."} instead.
+fn respond(req: Request, _code: u16, body: Value) {
     let h = Header::from_bytes("Content-Type", "application/json").unwrap();
-    let _ = req.respond(Response::from_string(body.to_string()).with_status_code(code).with_header(h));
+    let _ = req.respond(Response::from_string(body.to_string()).with_header(h));
 }
 
 fn handle(state: &Arc<State>, mut req: Request) {

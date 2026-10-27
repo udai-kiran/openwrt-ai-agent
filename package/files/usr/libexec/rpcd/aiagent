@@ -1,0 +1,59 @@
+#!/bin/sh
+# rpcd exec plugin: exposes the local aiagent daemon as the ubus object "aiagent".
+# LuCI calls send -> poll (until done); the daemon does the slow LLM work in the background.
+
+. /usr/share/libubox/jshn.sh
+
+BASE="http://127.0.0.1:8765"
+NOT_RUNNING='{"error":"aiagent daemon is not running"}'
+
+http_get() {
+	uclient-fetch -q -T 10 -O - "$BASE$1" 2>/dev/null
+}
+
+http_post() {
+	uclient-fetch -q -T 10 -O - --header='Content-Type: application/json' \
+		--post-data="$2" "$BASE$1" 2>/dev/null
+}
+
+case "$1" in
+list)
+	echo '{ "send": { "session": "str", "message": "str" }, "poll": { "job": "str" }, "reset": { "session": "str" }, "status": {} }'
+	;;
+call)
+	input="$(cat)"
+	[ -n "$input" ] || input='{}'
+	json_load "$input" 2>/dev/null
+	json_get_var session session
+	json_get_var message message
+	json_get_var job job
+
+	case "$2" in
+	send)
+		json_init
+		json_add_string session "${session:-default}"
+		json_add_string message "$message"
+		out="$(http_post /chat "$(json_dump)")"
+		;;
+	reset)
+		json_init
+		json_add_string session "${session:-default}"
+		out="$(http_post /reset "$(json_dump)")"
+		;;
+	poll)
+		# job ids are j<digits>; refuse anything else so it cannot alter the URL
+		case "$job" in
+		j[0-9]*) out="$(http_get "/job/$job")" ;;
+		*) out='{"error":"invalid job id"}' ;;
+		esac
+		;;
+	status)
+		out="$(http_get /status)"
+		;;
+	*)
+		out='{"error":"unknown method"}'
+		;;
+	esac
+	echo "${out:-$NOT_RUNNING}"
+	;;
+esac
