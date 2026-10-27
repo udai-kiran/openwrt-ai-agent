@@ -76,7 +76,11 @@ docker run -d --name oai -p 127.0.0.1:8081:80 openwrt-ai-agent:docker
 `docker-arm64` builds the binary and ipk; its image needs qemu binfmt to build on an x86 host.
 
 ## Status
-Verified: unit tests, builds for all targets, install and boot on the OpenWrt 24.10 x86_64 rig,
-the rpcd bridge, ACL enforcement, and LuCI login plus the page ubus calls over HTTP.
-**Not yet verified:** rendering of the LuCI pages in a browser, a real LLM endpoint, and a
-physical Raspberry Pi 3B.
+Verified: unit tests; builds for all five targets; install and boot on the OpenWrt 24.10 x86_64 rig;
+the rpcd bridge; ACL enforcement; and the LuCI pages in headless Chrome (`tests/ui_test.py`):
+menu entry, chat round-trip through a tool call, new-conversation reset, all six settings fields,
+endpoint validation, and the settings form staging the right UCI change. The daemon picks up a
+committed config change without a restart.
+
+**Not yet verified:** LuCI "Save & Apply" end to end (apply hangs in the container because netifd
+has no real network, unrelated to this package), a real LLM endpoint, and a physical Raspberry Pi 3B.
