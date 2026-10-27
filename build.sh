@@ -19,6 +19,12 @@ declare -A ARCH=(
 	[docker]=x86_64
 	[docker-arm64]=aarch64_generic
 )
+# docker image base + platform (only the docker* targets build an image)
+declare -A DOCKER_BASE=(
+	[docker]=openwrt/rootfs:x86_64-openwrt-24.10
+	[docker-arm64]=openwrt/rootfs:aarch64_generic-openwrt-24.10
+)
+declare -A DOCKER_PLATFORM=([docker]=linux/amd64 [docker-arm64]=linux/arm64)
 ALL=(rpi3 rpi3-32 x86_64)
 
 usage() {
@@ -79,7 +85,10 @@ build_target() {
 		echo "==> dist/aiagent_${name}_${arch}.ipk"
 	fi
 	if [[ $name == docker* && -f docker/Dockerfile ]] && command -v docker >/dev/null; then
-		docker build -t "openwrt-ai-agent:$name" --build-arg "IPK=dist/aiagent_${name}_${arch}.ipk" -f docker/Dockerfile .
+		docker build -t "openwrt-ai-agent:$name" --platform "${DOCKER_PLATFORM[$name]}" \
+			--build-arg "BASE=${DOCKER_BASE[$name]}" \
+			--build-arg "IPK=dist/aiagent_${name}_${arch}.ipk" -f docker/Dockerfile . ||
+			echo "warning: docker image for $name failed (a foreign-arch image needs qemu binfmt)" >&2
 	fi
 }
 
