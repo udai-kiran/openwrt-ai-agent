@@ -1,0 +1,18 @@
+[package]
+name = "aiagent"
+version = "0.1.0"
+edition = "2021"
+description = "Read-only AI chat agent for OpenWrt"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2", default-features = false, features = ["json", "tls"] }
+tiny_http = "0.12"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
