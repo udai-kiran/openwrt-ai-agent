@@ -21,6 +21,13 @@ LuCI page ──ubus──▶ rpcd plugin "aiagent" ──HTTP (loopback)──�
   Tool output is capped at 6 KB.
 - The daemon listens on `127.0.0.1:8765` only.
 
+## Install on a NanoPi R2S / R2S Plus (RK3328)
+`./build.sh nanopi-r2s` builds `dist/aiagent_nanopi-r2s_aarch64_generic.ipk` (OpenWrt target
+`rockchip/armv8`, package arch `aarch64_generic`). OpenWrt 24.10 has a `friendlyarm_nanopi-r2s`
+image but no dedicated *R2S Plus* profile; the Plus is the R2S plus eMMC, so use the R2S
+image written to a microSD card. Booting OpenWrt from the onboard eMMC is not verified.
+The R2S Plus has no Wi-Fi unless you add the M.2 module, so the Wi-Fi tools return empty results.
+
 ## Install
 Flash OpenWrt 24.10 (Raspberry Pi 3B: `bcm27xx/bcm2710`, 64-bit), then:
 
@@ -60,6 +67,7 @@ Needs Rust and either [`cargo-zigbuild`](https://github.com/rust-cross/cargo-zig
 ```sh
 ./build.sh list
 ./build.sh rpi3          # aarch64 musl -> dist/aiagent-rpi3 + dist/aiagent_rpi3_aarch64_cortex-a53.ipk
+./build.sh nanopi-r2s    # RK3328 boards, aarch64_generic
 ./build.sh rpi3-32       # armv7 musl (32-bit Pi images)
 ./build.sh x86_64        # OpenWrt x86
 ./build.sh docker        # x86_64 + test image (below)

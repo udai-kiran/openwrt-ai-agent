@@ -11,6 +11,7 @@ declare -A TRIPLE=(
 	[x86_64]=x86_64-unknown-linux-musl
 	[docker]=x86_64-unknown-linux-musl
 	[docker-arm64]=aarch64-unknown-linux-musl
+	[nanopi-r2s]=aarch64-unknown-linux-musl
 )
 declare -A ARCH=(
 	[rpi3]=aarch64_cortex-a53
@@ -18,6 +19,7 @@ declare -A ARCH=(
 	[x86_64]=x86_64
 	[docker]=x86_64
 	[docker-arm64]=aarch64_generic
+	[nanopi-r2s]=aarch64_generic
 )
 # docker image base + platform (only the docker* targets build an image)
 declare -A DOCKER_BASE=(
@@ -25,7 +27,7 @@ declare -A DOCKER_BASE=(
 	[docker-arm64]=openwrt/rootfs:aarch64_generic-openwrt-24.10
 )
 declare -A DOCKER_PLATFORM=([docker]=linux/amd64 [docker-arm64]=linux/arm64)
-ALL=(rpi3 rpi3-32 x86_64)
+ALL=(rpi3 rpi3-32 x86_64 nanopi-r2s)
 
 usage() {
 	echo "usage: $0 <target>... | all | list"
