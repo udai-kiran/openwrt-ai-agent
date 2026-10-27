@@ -79,7 +79,7 @@ build_target() {
 		echo "==> dist/aiagent_${name}_${arch}.ipk"
 	fi
 	if [[ $name == docker* && -f docker/Dockerfile ]] && command -v docker >/dev/null; then
-		docker build -t "openwrt-ai-agent:$name" --build-arg "BIN=dist/aiagent-$name" -f docker/Dockerfile .
+		docker build -t "openwrt-ai-agent:$name" --build-arg "IPK=dist/aiagent_${name}_${arch}.ipk" -f docker/Dockerfile .
 	fi
 }
 

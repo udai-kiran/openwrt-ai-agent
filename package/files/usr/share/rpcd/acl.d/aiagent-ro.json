@@ -8,7 +8,8 @@
 				"network.wireless": [ "status" ],
 				"iwinfo": [ "devices", "assoclist" ],
 				"luci-rpc": [ "getDHCPLeases" ],
-				"log": [ "read" ]
+				"log": [ "read" ],
+				"uci": [ "get" ]
 			},
 			"uci": [ "network", "wireless", "dhcp", "firewall", "system" ]
 		}
