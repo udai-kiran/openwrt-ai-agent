@@ -28,6 +28,35 @@ image but no dedicated *R2S Plus* profile; the Plus is the R2S plus eMMC, so use
 image written to a microSD card. Booting OpenWrt from the onboard eMMC is not verified.
 The R2S Plus has no Wi-Fi unless you add the M.2 module, so the Wi-Fi tools return empty results.
 
+## Low-flash routers: TP-Link Archer C6 v2 (EU/RU/JP) (QCA956x, big-endian MIPS)
+Profile `tplink_archer-c6-v2` (`ath79/generic`, `mips_24kc`). This model has an 8 MB flash and only
+**384 KB** of writable overlay (no USB for extroot), so the 2 MB binary cannot be installed. Instead the
+router keeps about 11 KB of files and **fetches the binary into RAM (`/tmp`) at every boot**, verifying a
+pinned SHA-256 (`binary_url`, `binary_sha256` in `/etc/config/aiagent`) before running it. The wrapper
+retries until the network is up, so the agent is unavailable until the first successful download.
+
+```sh
+./build.sh archer-c6-v2     # -> dist/aiagent-archer-c6-v2 (+ .sha256) and dist/aiagent-light_*.tar.gz
+# publish dist/aiagent-archer-c6-v2 as a release asset, then on the router:
+ssh root@ROUTER 'tar xzf - -C /' < dist/aiagent-light_archer-c6-v2_mips_24kc.tar.gz
+ssh root@ROUTER 'sh /usr/libexec/aiagent-setup'
+```
+Re-running the two commands updates the binary pin and keeps your settings and the generated read-only login.
+This works with OpenWrt 25.12 (apk) because it does not use a package manager. The build is a Rust Tier 3
+target and needs nightly Rust with `rust-src` and `ziglang==0.14.1` specifically (0.13 lacks the
+soft-float MIPS libc; 0.16 fails to link).
+
+Verified on a real Archer C6 v2 running OpenWrt 25.12.6: boot-time fetch over HTTPS and checksum,
+the rpcd bridge, all seven tools as the read-only login, TLS to OpenRouter, update path.
+`aiagent tool NAME [JSON]` runs a single tool against the router for diagnostics.
+
+## Install on a NanoPi R2S / R2S Plus (RK3328)
+`./build.sh nanopi-r2s` builds `dist/aiagent_nanopi-r2s_aarch64_generic.ipk` (OpenWrt target
+`rockchip/armv8`, package arch `aarch64_generic`). OpenWrt 24.10 has a `friendlyarm_nanopi-r2s`
+image but no dedicated *R2S Plus* profile; the Plus is the R2S plus eMMC, so use the R2S
+image written to a microSD card. Booting OpenWrt from the onboard eMMC is not verified.
+The R2S Plus has no Wi-Fi unless you add the M.2 module, so the Wi-Fi tools return empty results.
+
 ## Install on a TP-Link Archer C6 v2 (EU/RU/JP) (QCA956x, big-endian MIPS)
 OpenWrt 24.10 profile `tplink_archer-c6-v2` (`ath79/generic`, package arch `mips_24kc`).
 `./build.sh archer-c6-v2` builds `dist/aiagent_archer-c6-v2_mips_24kc.ipk` (about 0.9 MB, 2.0 MB installed;
