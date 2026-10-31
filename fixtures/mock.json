@@ -1,14 +1,167 @@
 {
-  "system.board": {"kernel":"6.6.73","hostname":"OpenWrt","model":{"id":"raspberrypi,3-model-b","name":"Raspberry Pi 3 Model B"},"release":{"distribution":"OpenWrt","version":"24.10.0","target":"bcm27xx/bcm2710"}},
-  "system.info": {"uptime":93784,"load":[5120,6400,5900],"memory":{"total":970000000,"free":610000000,"buffered":20000000,"cached":120000000},"swap":{"total":0,"free":0}},
-  "network.interface.dump": {"interface":[
-    {"interface":"lan","up":true,"proto":"static","device":"br-lan","ipv4-address":[{"address":"192.168.1.1","mask":24}],"uptime":93700},
-    {"interface":"wan","up":true,"proto":"dhcp","device":"eth1","ipv4-address":[{"address":"203.0.113.7","mask":24}],"route":[{"target":"0.0.0.0","mask":0,"nexthop":"203.0.113.1"}],"dns-server":["1.1.1.1"],"uptime":93650}
-  ]},
-  "network.wireless.status": {"radio0":{"up":true,"disabled":false,"config":{"channel":"6","htmode":"HT20","country":"US","key":"SHOULD-BE-REDACTED"},"interfaces":[{"section":"default_radio0","ifname":"phy0-ap0","config":{"mode":"ap","ssid":"HomeNet","encryption":"psk2","key":"hunter2hunter2"}}]}},
-  "iwinfo.devices": {"devices":["phy0-ap0"]},
-  "iwinfo.assoclist": {"results":[{"mac":"AA:BB:CC:DD:EE:01","signal":-52,"noise":-95,"rx":{"rate":72200},"tx":{"rate":65000}},{"mac":"AA:BB:CC:DD:EE:02","signal":-71,"noise":-95,"rx":{"rate":24000},"tx":{"rate":18000}}]},
-  "luci-rpc.getDHCPLeases": {"dhcp_leases":[{"expires":41000,"macaddr":"aa:bb:cc:dd:ee:01","ipaddr":"192.168.1.101","hostname":"laptop"},{"expires":39000,"macaddr":"aa:bb:cc:dd:ee:02","ipaddr":"192.168.1.115","hostname":"phone"}]},
-  "log.read": {"log":[{"time":93700,"priority":6,"source":3,"msg":"hostapd: phy0-ap0: STA aa:bb:cc:dd:ee:02 IEEE 802.11: associated"},{"time":93710,"priority":4,"source":0,"msg":"kernel: nf_conntrack: table full, dropping packet"}]},
-  "uci.get": {"values":{"cfg01":{".type":"zone",".name":"lan","name":"lan","input":"ACCEPT","output":"ACCEPT","forward":"ACCEPT"},"cfg02":{".type":"zone",".name":"wan","name":"wan","input":"REJECT","output":"ACCEPT","forward":"REJECT","masq":"1"}}}
+ "system.board": {
+  "kernel": "6.6.73",
+  "hostname": "OpenWrt",
+  "model": {
+   "id": "raspberrypi,3-model-b",
+   "name": "Raspberry Pi 3 Model B"
+  },
+  "release": {
+   "distribution": "OpenWrt",
+   "version": "24.10.0",
+   "target": "bcm27xx/bcm2710"
+  }
+ },
+ "system.info": {
+  "uptime": 93784,
+  "load": [
+   5120,
+   6400,
+   5900
+  ],
+  "memory": {
+   "total": 970000000,
+   "free": 610000000,
+   "buffered": 20000000,
+   "cached": 120000000
+  },
+  "swap": {
+   "total": 0,
+   "free": 0
+  }
+ },
+ "network.interface.dump": {
+  "interface": [
+   {
+    "interface": "lan",
+    "up": true,
+    "proto": "static",
+    "device": "br-lan",
+    "ipv4-address": [
+     {
+      "address": "192.168.1.1",
+      "mask": 24
+     }
+    ],
+    "uptime": 93700
+   },
+   {
+    "interface": "wan",
+    "up": true,
+    "proto": "dhcp",
+    "device": "eth1",
+    "ipv4-address": [
+     {
+      "address": "203.0.113.7",
+      "mask": 24
+     }
+    ],
+    "route": [
+     {
+      "target": "0.0.0.0",
+      "mask": 0,
+      "nexthop": "203.0.113.1"
+     }
+    ],
+    "dns-server": [
+     "1.1.1.1"
+    ],
+    "uptime": 93650
+   }
+  ]
+ },
+ "iwinfo.devices": {
+  "devices": [
+   "phy0-ap0"
+  ]
+ },
+ "iwinfo.assoclist": {
+  "results": [
+   {
+    "mac": "AA:BB:CC:DD:EE:01",
+    "signal": -52,
+    "noise": -95,
+    "rx": {
+     "rate": 72200
+    },
+    "tx": {
+     "rate": 65000
+    }
+   },
+   {
+    "mac": "AA:BB:CC:DD:EE:02",
+    "signal": -71,
+    "noise": -95,
+    "rx": {
+     "rate": 24000
+    },
+    "tx": {
+     "rate": 18000
+    }
+   }
+  ]
+ },
+ "luci-rpc.getDHCPLeases": {
+  "dhcp_leases": [
+   {
+    "expires": 41000,
+    "macaddr": "aa:bb:cc:dd:ee:01",
+    "ipaddr": "192.168.1.101",
+    "hostname": "laptop"
+   },
+   {
+    "expires": 39000,
+    "macaddr": "aa:bb:cc:dd:ee:02",
+    "ipaddr": "192.168.1.115",
+    "hostname": "phone"
+   }
+  ]
+ },
+ "log.read": {
+  "log": [
+   {
+    "time": 93700,
+    "priority": 6,
+    "source": 3,
+    "msg": "hostapd: phy0-ap0: STA aa:bb:cc:dd:ee:02 IEEE 802.11: associated"
+   },
+   {
+    "time": 93710,
+    "priority": 4,
+    "source": 0,
+    "msg": "kernel: nf_conntrack: table full, dropping packet"
+   }
+  ]
+ },
+ "uci.get": {
+  "values": {
+   "default_radio0": {
+    ".type": "wifi-iface",
+    "ssid": "HomeNet",
+    "encryption": "psk2",
+    "key": "hunter2hunter2"
+   }
+  }
+ },
+ "iwinfo.info": {
+  "phy": "phy0",
+  "ssid": "HomeNet",
+  "channel": 6,
+  "mode": "Master",
+  "txpower": 20,
+  "quality": 60,
+  "quality_max": 70,
+  "encryption": {
+   "enabled": true,
+   "wpa": [
+    2
+   ],
+   "authentication": [
+    "psk"
+   ],
+   "ciphers": [
+    "ccmp"
+   ]
+  }
+ }
 }

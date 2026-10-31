@@ -17,7 +17,7 @@ pub fn definitions() -> Value {
     json!([
         tool("system_info", "Board model, OpenWrt release, kernel, uptime, load average and memory usage.", json!({}), &[]),
         tool("network_interfaces", "All logical network interfaces (lan, wan, ...) with protocol, up/down state, IP addresses, routes and DNS servers.", json!({}), &[]),
-        tool("wifi_status", "Wireless radios and SSIDs: channel, mode, encryption, up/down. Keys are redacted.", json!({}), &[]),
+        tool("wifi_status", "Wi-Fi interfaces: SSID, channel, mode, encryption, signal, tx power. Keys are redacted.", json!({}), &[]),
         tool("wifi_clients", "Wireless stations currently associated to each Wi-Fi interface, with signal strength and rates.", json!({}), &[]),
         tool("dhcp_leases", "Active DHCP leases: hostname, IP and MAC address of LAN clients.", json!({}), &[]),
         tool("system_log", "Most recent lines of the system log (logd).",
@@ -48,16 +48,8 @@ fn dispatch(ubus: &dyn Ubus, name: &str, args: &Value) -> Result<Value, String> 
             "info": ubus.call("system", "info", none)?,
         })),
         "network_interfaces" => ubus.call("network.interface", "dump", none),
-        "wifi_status" => ubus.call("network.wireless", "status", none),
-        "wifi_clients" => {
-            let devs = ubus.call("iwinfo", "devices", none)?;
-            let mut out = Map::new();
-            for d in devs["devices"].as_array().into_iter().flatten().filter_map(Value::as_str) {
-                let r = ubus.call("iwinfo", "assoclist", json!({"device": d}))?;
-                out.insert(d.to_string(), r);
-            }
-            Ok(Value::Object(out))
-        }
+        "wifi_status" => per_wifi_device(ubus, "info"),
+        "wifi_clients" => per_wifi_device(ubus, "assoclist"),
         "dhcp_leases" => ubus.call("luci-rpc", "getDHCPLeases", none),
         "system_log" => {
             let n = args["lines"].as_i64().unwrap_or(50).clamp(1, 200);
@@ -76,6 +68,17 @@ fn dispatch(ubus: &dyn Ubus, name: &str, args: &Value) -> Result<Value, String> 
         }
         other => Err(format!("unknown tool '{other}'")),
     }
+}
+
+/// Run an iwinfo method for every wireless interface. (network.wireless status is not used:
+/// netifd rejects the session field ubus injects for restricted logins.)
+fn per_wifi_device(ubus: &dyn Ubus, method: &str) -> Result<Value, String> {
+    let devs = ubus.call("iwinfo", "devices", json!({}))?;
+    let mut out = Map::new();
+    for d in devs["devices"].as_array().into_iter().flatten().filter_map(Value::as_str) {
+        out.insert(d.to_string(), ubus.call("iwinfo", method, json!({"device": d}))?);
+    }
+    Ok(Value::Object(out))
 }
 
 fn redact(v: &mut Value) {
@@ -113,11 +116,17 @@ mod tests {
     use crate::ubus::MockUbus;
 
     #[test]
-    fn wifi_keys_are_redacted() {
-        let out = run(&MockUbus::builtin(), "wifi_status", &json!({}));
+    fn uci_wifi_keys_are_redacted() {
+        let out = run(&MockUbus::builtin(), "uci_get", &json!({"config":"wireless"}));
         assert!(!out.contains("hunter2"));
-        assert!(!out.contains("SHOULD-BE-REDACTED"));
+        assert!(out.contains("[redacted]"));
         assert!(out.contains("HomeNet"));
+    }
+
+    #[test]
+    fn wifi_status_reads_iwinfo() {
+        let out = run(&MockUbus::builtin(), "wifi_status", &json!({}));
+        assert!(out.contains("phy0-ap0") && out.contains("HomeNet"));
     }
 
     #[test]

@@ -5,8 +5,7 @@
 			"ubus": {
 				"system": [ "board", "info" ],
 				"network.interface": [ "dump" ],
-				"network.wireless": [ "status" ],
-				"iwinfo": [ "devices", "assoclist" ],
+				"iwinfo": [ "devices", "info", "assoclist" ],
 				"luci-rpc": [ "getDHCPLeases" ],
 				"log": [ "read" ],
 				"uci": [ "get" ]
