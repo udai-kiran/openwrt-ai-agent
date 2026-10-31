@@ -28,6 +28,16 @@ image but no dedicated *R2S Plus* profile; the Plus is the R2S plus eMMC, so use
 image written to a microSD card. Booting OpenWrt from the onboard eMMC is not verified.
 The R2S Plus has no Wi-Fi unless you add the M.2 module, so the Wi-Fi tools return empty results.
 
+## Install on a TP-Link Archer C6 v2 (EU/RU/JP) (QCA956x, big-endian MIPS)
+OpenWrt 24.10 profile `tplink_archer-c6-v2` (`ath79/generic`, package arch `mips_24kc`).
+`./build.sh archer-c6-v2` builds `dist/aiagent_archer-c6-v2_mips_24kc.ipk` (about 0.9 MB, 2.0 MB installed;
+check `df /overlay` first). It is a Rust Tier 3 target, so the build needs:
+- nightly Rust with `rust-src` (`rustup toolchain install nightly --profile minimal -c rust-src`)
+- `ziglang==0.14.1` specifically: 0.13 lacks the soft-float MIPS libc, and 0.16 fails to link it.
+
+The binary is checked to be MIPS32r2, big-endian, o32, soft-float, static. It has **not** been run on
+hardware or under emulation yet.
+
 ## Install
 Flash OpenWrt 24.10 (Raspberry Pi 3B: `bcm27xx/bcm2710`, 64-bit), then:
 
@@ -62,11 +72,12 @@ Changes apply to the next message; changing `listen`/`ubus_*` needs a service re
 
 ## Build
 Needs Rust and either [`cargo-zigbuild`](https://github.com/rust-cross/cargo-zigbuild) + `ziglang`
-(`pip install ziglang`) or [`cross`](https://github.com/cross-rs/cross) (`BUILDER=cross`).
+(`pip install ziglang==0.14.1`) or [`cross`](https://github.com/cross-rs/cross) (`BUILDER=cross`).
 
 ```sh
 ./build.sh list
 ./build.sh rpi3          # aarch64 musl -> dist/aiagent-rpi3 + dist/aiagent_rpi3_aarch64_cortex-a53.ipk
+./build.sh archer-c6-v2  # QCA956x MIPS (nightly + zig 0.14.1)
 ./build.sh nanopi-r2s    # RK3328 boards, aarch64_generic
 ./build.sh rpi3-32       # armv7 musl (32-bit Pi images)
 ./build.sh x86_64        # OpenWrt x86

@@ -5,7 +5,7 @@ use crate::ubus::Ubus;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::io::Read;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tiny_http::{Header, Method, Request, Response, Server};
@@ -36,7 +36,7 @@ struct State {
     ubus: Arc<dyn Ubus>,
     sessions: Mutex<HashMap<String, Session>>,
     jobs: Mutex<HashMap<String, Job>>,
-    counter: AtomicU64,
+    counter: AtomicU32,
 }
 
 pub fn serve(config_path: &str, llm: Arc<dyn Llm>, ubus: Arc<dyn Ubus>) -> Result<(), String> {
@@ -49,7 +49,7 @@ pub fn serve(config_path: &str, llm: Arc<dyn Llm>, ubus: Arc<dyn Ubus>) -> Resul
         ubus,
         sessions: Mutex::new(HashMap::new()),
         jobs: Mutex::new(HashMap::new()),
-        counter: AtomicU64::new(1),
+        counter: AtomicU32::new(1),
     });
     for req in server.incoming_requests() {
         handle(&state, req);
