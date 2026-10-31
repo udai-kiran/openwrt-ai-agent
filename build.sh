@@ -11,7 +11,6 @@ declare -A TRIPLE=(
 	[x86_64]=x86_64-unknown-linux-musl
 	[docker]=x86_64-unknown-linux-musl
 	[docker-arm64]=aarch64-unknown-linux-musl
-	[nanopi-r2s]=aarch64-unknown-linux-musl
 	[archer-c6-v2]=mips-unknown-linux-musl
 )
 declare -A ARCH=(
@@ -20,7 +19,6 @@ declare -A ARCH=(
 	[x86_64]=x86_64
 	[docker]=x86_64
 	[docker-arm64]=aarch64_generic
-	[nanopi-r2s]=aarch64_generic
 	[archer-c6-v2]=mips_24kc
 )
 # docker image base + platform (only the docker* targets build an image)
@@ -31,7 +29,7 @@ declare -A DOCKER_BASE=(
 declare -A DOCKER_PLATFORM=([docker]=linux/amd64 [docker-arm64]=linux/arm64)
 # targets too small for a persistent binary: ship a RAM-fetch bundle instead of an ipk
 LIGHT=(archer-c6-v2)
-ALL=(rpi3 rpi3-32 x86_64 nanopi-r2s archer-c6-v2)
+ALL=(rpi3 rpi3-32 x86_64 archer-c6-v2)
 
 usage() {
 	echo "usage: $0 <target>... | all | list"
