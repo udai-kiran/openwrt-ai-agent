@@ -29,6 +29,8 @@ declare -A DOCKER_BASE=(
 	[docker-arm64]=openwrt/rootfs:aarch64_generic-openwrt-24.10
 )
 declare -A DOCKER_PLATFORM=([docker]=linux/amd64 [docker-arm64]=linux/arm64)
+# targets too small for a persistent binary: ship a RAM-fetch bundle instead of an ipk
+LIGHT=(archer-c6-v2)
 ALL=(rpi3 rpi3-32 x86_64 nanopi-r2s archer-c6-v2)
 
 usage() {
@@ -67,6 +69,23 @@ build_binary() { # triple
 	esac
 }
 
+make_light() { # binary out  -> tarball of small persistent files; binary is fetched into RAM at boot
+	local bin=$1 out=$2 version tag sha tmp
+	version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+	tag=${RELEASE_TAG:-v$version}
+	sha=$(sha256sum "$bin" | cut -d' ' -f1)
+	tmp=$(mktemp -d)
+	cp -a package/files/. "$tmp/"
+	cp -a package/light/. "$tmp/"
+	install -m 755 package/control/postinst "$tmp/usr/libexec/aiagent-setup"
+	mv "$tmp/etc/config/aiagent" "$tmp/etc/config/aiagent.default"
+	printf "\toption binary_url 'https://github.com/udai-kiran/openwrt-ai-agent/releases/download/%s/%s'\n\toption binary_sha256 '%s'\n" \
+		"$tag" "$(basename "$bin")" "$sha" >>"$tmp/etc/config/aiagent.default"
+	tar --owner=0 --group=0 --numeric-owner -czf "$out" -C "$tmp" .
+	rm -rf "$tmp"
+	echo "$sha  $(basename "$bin")" >"$bin.sha256"
+}
+
 make_ipk() { # binary arch out
 	local bin=$1 arch=$2 out=$3 version tmp
 	version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
@@ -92,7 +111,10 @@ build_target() {
 	mkdir -p dist
 	cp "target/$triple/release/aiagent" "dist/aiagent-$name"
 	echo "==> dist/aiagent-$name ($(du -h "dist/aiagent-$name" | cut -f1))"
-	if [ -z "${NO_IPK:-}" ]; then
+	if [[ " ${LIGHT[*]} " == *" $name "* ]]; then
+		make_light "dist/aiagent-$name" "dist/aiagent-light_${name}_${arch}.tar.gz"
+		echo "==> dist/aiagent-light_${name}_${arch}.tar.gz (upload dist/aiagent-$name to release ${RELEASE_TAG:-v?})"
+	elif [ -z "${NO_IPK:-}" ]; then
 		make_ipk "dist/aiagent-$name" "$arch" "dist/aiagent_${name}_${arch}.ipk"
 		echo "==> dist/aiagent_${name}_${arch}.ipk"
 	fi

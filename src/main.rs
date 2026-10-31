@@ -12,6 +12,7 @@ const USAGE: &str = "usage:
   aiagent serve [--config PATH] [--mock]   run the chat daemon
   aiagent ask \"question\" [--config PATH] [--mock]
   aiagent tools                            print the tool schemas
+  aiagent tool NAME [JSON_ARGS] [--mock]   run one read-only tool against ubus (diagnostics, no LLM)
 
   --mock       use built-in canned router data instead of ubus
   --config     UCI file (default /etc/config/aiagent, or $AIAGENT_CONFIG)
@@ -30,6 +31,13 @@ fn main() {
             server::serve(&config_path, Arc::new(llm::HttpLlm), ubus)
         }
         Some("ask") if args.len() > 1 => ask(&config_path, mock, &args[1..].join(" ")),
+        Some("tool") if args.len() > 1 => {
+            let targs = match args.get(2) {
+                Some(j) => serde_json::from_str(j).map_err(|e| format!("bad JSON args: {e}")),
+                None => Ok(serde_json::json!({})),
+            };
+            targs.map(|a| println!("{}", tools::run(make_ubus(&config_path, mock).as_ref(), &args[1], &a)))
+        }
         Some("tools") => {
             println!("{}", serde_json::to_string_pretty(&tools::definitions()).unwrap());
             Ok(())

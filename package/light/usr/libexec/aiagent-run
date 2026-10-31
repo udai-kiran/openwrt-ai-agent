@@ -1,0 +1,26 @@
+#!/bin/sh
+# Low-flash devices: the binary lives in RAM. Fetch it, verify the pinned SHA-256, then run it.
+BIN=/tmp/aiagent
+url="$(uci -q get aiagent.main.binary_url)"
+sha="$(uci -q get aiagent.main.binary_sha256)"
+
+if [ -z "$url" ] || [ -z "$sha" ]; then
+	echo "aiagent: binary_url / binary_sha256 not set in /etc/config/aiagent" >&2
+	exit 1
+fi
+
+sum() { sha256sum "$1" | cut -d' ' -f1; }
+have() { [ -x "$BIN" ] && [ "$(sum "$BIN")" = "$sha" ]; }
+
+until have; do
+	rm -f "$BIN.tmp"
+	if uclient-fetch -q -T 30 -O "$BIN.tmp" "$url" && [ "$(sum "$BIN.tmp")" = "$sha" ]; then
+		chmod 755 "$BIN.tmp"
+		mv "$BIN.tmp" "$BIN"
+	else
+		echo "aiagent: download or checksum failed, retrying in 15s" >&2
+		rm -f "$BIN.tmp"
+		sleep 15
+	fi
+done
+exec "$BIN" serve

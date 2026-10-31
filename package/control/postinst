@@ -1,6 +1,20 @@
 #!/bin/sh
 [ -n "$IPKG_INSTROOT" ] && exit 0
 
+# RAM-binary bundles ship the config as .default: create it once, afterwards only refresh the binary pin
+if [ -f /etc/config/aiagent.default ]; then
+	if [ ! -f /etc/config/aiagent ]; then
+		mv /etc/config/aiagent.default /etc/config/aiagent
+	else
+		for o in binary_url binary_sha256; do
+			v="$(sed -n "s/^[[:space:]]*option $o '\(.*\)'/\1/p" /etc/config/aiagent.default)"
+			[ -n "$v" ] && uci set aiagent.main.$o="$v"
+		done
+		uci commit aiagent
+		rm -f /etc/config/aiagent.default
+	fi
+fi
+
 chmod 600 /etc/config/aiagent
 
 # Dedicated rpcd login restricted to the read-only ACL group; created once.
