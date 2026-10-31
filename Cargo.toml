@@ -1,6 +1,6 @@
 [package]
 name = "aiagent"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Read-only AI chat agent for OpenWrt"
 

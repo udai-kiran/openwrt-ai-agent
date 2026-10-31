@@ -17,7 +17,9 @@ pub struct Config {
 pub const DEFAULT_SYSTEM_PROMPT: &str = "You are a read-only assistant running on an OpenWrt router. \
 Answer the user's questions about this router by calling the provided tools to read its live state. \
 You cannot change anything on the router; if asked to, explain what the user could do themselves. \
-Be concise. Never ask for or repeat secrets such as passwords or keys.";
+Report only what the tool output says; do not infer Wi-Fi standards, security modes or health \
+beyond the fields provided, and say when a value is not in the data. Use plain text without emojis, \
+and be concise. Never ask for or repeat secrets such as passwords or keys.";
 
 impl Default for Config {
     fn default() -> Self {

@@ -48,7 +48,7 @@ fn dispatch(ubus: &dyn Ubus, name: &str, args: &Value) -> Result<Value, String> 
             "info": ubus.call("system", "info", none)?,
         })),
         "network_interfaces" => ubus.call("network.interface", "dump", none),
-        "wifi_status" => per_wifi_device(ubus, "info"),
+        "wifi_status" => per_wifi_device(ubus, "info").map(|v| summarize_wifi(&v)),
         "wifi_clients" => per_wifi_device(ubus, "assoclist"),
         "dhcp_leases" => ubus.call("luci-rpc", "getDHCPLeases", none),
         "system_log" => {
@@ -79,6 +79,51 @@ fn per_wifi_device(ubus: &dyn Ubus, method: &str) -> Result<Value, String> {
         out.insert(d.to_string(), ubus.call("iwinfo", method, json!({"device": d}))?);
     }
     Ok(Value::Object(out))
+}
+
+/// Turn raw iwinfo output into plain facts. Small models misread terse fields such as
+/// `wpa:[2,3]` or invent standards, so band, standards and security are spelled out here and
+/// the ambiguous AP-side `signal`/`quality` fields are left out (client signal is in wifi_clients).
+fn summarize_wifi(raw: &Value) -> Value {
+    let mut out = Map::new();
+    for (dev, i) in raw.as_object().into_iter().flatten() {
+        let band = match i["frequency"].as_u64() {
+            Some(f) if f < 3000 => "2.4 GHz",
+            Some(f) if f < 5900 => "5 GHz",
+            Some(_) => "6 GHz",
+            None => "unknown",
+        };
+        out.insert(
+            dev.clone(),
+            json!({
+                "ssid": i["ssid"], "mode": i["mode"], "band": band, "channel": i["channel"],
+                "frequency_mhz": i["frequency"], "channel_width": i["htmode"],
+                "supported_standards": i["hwmodes_text"], "security": wifi_security(&i["encryption"]),
+                "tx_power_dbm": i["txpower"], "country": i["country"], "encryption_raw": i["encryption"],
+            }),
+        );
+    }
+    Value::Object(out)
+}
+
+fn wifi_security(e: &Value) -> String {
+    if e["enabled"] != true {
+        return "open (no encryption)".into();
+    }
+    let list = |k: &str| -> Vec<String> {
+        e[k].as_array().into_iter().flatten().filter_map(|v| v.as_str().map(str::to_uppercase)).collect()
+    };
+    let wpa: Vec<String> = e["wpa"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_u64)
+        .map(|v| if v == 1 { "WPA".to_string() } else { format!("WPA{v}") })
+        .collect();
+    if wpa.is_empty() {
+        return "encrypted, not WPA (see encryption_raw)".into();
+    }
+    format!("{} ({}, {})", wpa.join("/"), list("authentication").join("+"), list("ciphers").join("+"))
 }
 
 fn redact(v: &mut Value) {
@@ -127,6 +172,27 @@ mod tests {
     fn wifi_status_reads_iwinfo() {
         let out = run(&MockUbus::builtin(), "wifi_status", &json!({}));
         assert!(out.contains("phy0-ap0") && out.contains("HomeNet"));
+    }
+
+    // values copied from a real Archer C6 v2: the model once reported WPA3 and "ac" on the wrong bands
+    #[test]
+    fn wifi_summary_is_spelled_out() {
+        let raw = json!({
+            "phy0-ap0": {"ssid":"Gilead","mode":"Master","channel":157,"frequency":5785,"htmode":"VHT80",
+                "hwmodes_text":"ac/n","txpower":30,"country":"US","signal":-44,"quality":66,
+                "encryption":{"enabled":true,"wpa":[2],"authentication":["psk"],"ciphers":["ccmp"]}},
+            "phy1-ap0": {"ssid":"Gilead","mode":"Master","channel":1,"frequency":2412,"htmode":"HT20",
+                "hwmodes_text":"b/g/n","txpower":20,"country":"US","signal":-48,"quality":62,
+                "encryption":{"enabled":true,"wpa":[2,3],"authentication":["psk","sae"],"ciphers":["ccmp"]}}
+        });
+        let s = summarize_wifi(&raw);
+        assert_eq!(s["phy0-ap0"]["band"], "5 GHz");
+        assert_eq!(s["phy0-ap0"]["security"], "WPA2 (PSK, CCMP)");
+        assert_eq!(s["phy1-ap0"]["band"], "2.4 GHz");
+        assert_eq!(s["phy1-ap0"]["supported_standards"], "b/g/n");
+        assert_eq!(s["phy1-ap0"]["security"], "WPA2/WPA3 (PSK+SAE, CCMP)");
+        assert!(s["phy0-ap0"].get("signal").is_none() && s["phy0-ap0"].get("quality").is_none());
+        assert_eq!(wifi_security(&json!({"enabled":false})), "open (no encryption)");
     }
 
     #[test]
